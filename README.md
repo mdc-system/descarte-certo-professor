@@ -4,6 +4,10 @@ Site para incentivar o **descarte correto de lixo eletrônico**. Produto da disc
 **Prática de Extensão Interdisciplinar II** (tema: *Sustentabilidade, Meio Ambiente e
 Desenvolvimento Social*).
 
+O site (pasta `web/`) é feito em **React** com a biblioteca de componentes **[Mantine](https://mantine.dev)**
+e os ícones **[Lucide](https://lucide.dev)**, gerado com **[Vite](https://vite.dev)**. A API (`servidor.js`) é Node puro com SQLite.
+Todas as bibliotecas são gratuitas e de código aberto (licenças MIT e ISC).
+
 ## O que o site faz
 
 1. **Explica por que** pilhas e eletrônicos não podem ir para o lixo comum (metais pesados,
@@ -64,13 +68,23 @@ Google Maps, clique com o botão direito no local e copie as coordenadas), `acei
 
 ## Como rodar no computador
 
-Precisa do [Node.js](https://nodejs.org) 22.5 ou mais novo. Na pasta do projeto:
+Precisa do [Node.js](https://nodejs.org) 22.5 ou mais novo. Primeiro gere o site (só na primeira vez e depois de mudar algo em `web/`):
+
+```bash
+cd web && npm install && npm run build && cd ..
+```
+
+Depois, na pasta do projeto:
 
 ```bash
 node servidor.js
 ```
 
-Abra http://localhost:5173. O mesmo servidor entrega o site e a API, e o banco local fica em `data/descarte.db`.
+Abra http://localhost:5173. O mesmo servidor entrega o site (pasta `web/dist`) e a API, e o banco local fica em `data/descarte.db`.
+
+Para mexer no visual com recarga automática, deixe o `node servidor.js` rodando e, em outro terminal,
+rode `cd web && npm run dev`: o Vite abre o site em http://localhost:5174 (ou na porta que ele mostrar) e
+repassa as chamadas `/api` para o servidor da porta 5173.
 
 ## Banco de dados e API
 
@@ -98,7 +112,7 @@ e-mail existe, e excluir a conta apaga tudo em cascata. Colunas novas entram por
 
 | Parte | Onde fica na VPS |
 |---|---|
-| Site (HTML/CSS/JS) | `/var/www/descarte-certo/` (servido pelo nginx) |
+| Site (conteúdo de `web/dist`) | `/var/www/descarte-certo/` (servido pelo nginx) |
 | API | `/opt/descarte-certo/servidor.js`, serviço **systemd** `descarte-certo-api` (usuário `www-data`, `127.0.0.1:3010`) |
 | Banco | `/opt/descarte-certo/data/descarte.db` |
 | nginx | blocos `/descarte-certo/api/` e `/descarte-certo/` em `/etc/nginx/sites-available/pfl` (backups em `/root/nginx-backups/`) |
@@ -111,11 +125,16 @@ Antes de usar os comandos abaixo, defina no terminal o acesso SSH da VPS. Esses 
 export VPS="root@IP_DA_VPS"; export CHAVE=~/.ssh/SUA_CHAVE
 ```
 
-Atualizar o **site** (na pasta do projeto). Depois de mudar CSS/JS, troque o número em `?v=` no `index.html` e no `conta.html` para forçar o navegador a baixar de novo:
+Atualizar o **site** (na pasta do projeto). O Vite põe um código novo no nome dos arquivos a cada build
+(`assets/inicio-XXXX.js`), então o navegador sempre baixa a versão nova, sem precisar trocar `?v=`.
+O comando gera o site, envia, guarda um backup do site atual em `/root/descarte-certo-backups/` e só então
+troca o conteúdo da pasta na VPS:
 
 ```bash
-tar -czf /tmp/dc.tgz index.html css js && scp -i "$CHAVE" /tmp/dc.tgz "$VPS":/tmp/ && ssh -i "$CHAVE" "$VPS" 'tar -xzf /tmp/dc.tgz -C /var/www/descarte-certo && chown -R www-data:www-data /var/www/descarte-certo && rm /tmp/dc.tgz'
+(cd web && npm run build) && tar -czf /tmp/dc.tgz -C web/dist . && scp -i "$CHAVE" /tmp/dc.tgz "$VPS":/tmp/ && ssh -i "$CHAVE" "$VPS" 'set -e; mkdir -p /root/descarte-certo-backups && tar -czf /root/descarte-certo-backups/site-$(date +%Y%m%d-%H%M%S).tgz -C /var/www/descarte-certo . && cd /var/www/descarte-certo && find . -mindepth 1 -delete && tar -xzf /tmp/dc.tgz && chown -R www-data:www-data . && rm /tmp/dc.tgz'
 ```
+
+Para voltar ao site anterior: `cd /var/www/descarte-certo && find . -mindepth 1 -delete && tar -xzf /root/descarte-certo-backups/ARQUIVO.tgz`.
 
 Atualizar a **API** e/ou a **lista de pontos**:
 
@@ -131,30 +150,38 @@ scp -i "$CHAVE" "$VPS":/opt/descarte-certo/data/descarte.db ./backup-descarte.db
 
 ## Outras formas de publicar de graça
 
-**Netlify (mais fácil):** acesse https://app.netlify.com/drop e arraste a pasta `descarte-certo`.
-Você recebe um link público na hora.
-
-**GitHub Pages:** crie um repositório, envie os arquivos e ative *Settings → Pages*.
+**Netlify (mais fácil):** gere o site (`cd web && npm run build`), acesse https://app.netlify.com/drop e arraste
+a pasta `web/dist`. Você recebe um link público na hora. Sem a API, a calculadora, a busca no OpenStreetMap e o
+mapa funcionam, mas os pontos cadastrados, a busca por CEP e as contas não.
 
 > A localização do navegador só funciona em `https://` ou `localhost`. Netlify e GitHub Pages já usam https.
 
-## Personalizar (arquivo `js/config.js`)
+## Personalizar (arquivo `web/src/config.js`)
 
 - `FORM_URL`: link do Google Forms de avaliação (a seção aparece sozinha quando preenchido).
-- `PONTOS_EXTRAS`: pontos de coleta confirmados por vocês (ex.: **a própria instituição parceira**,
-  ecoponto da prefeitura). Eles aparecem sempre, mesmo se o servidor de mapas cair.
-- `RAIO_PADRAO_KM`: raio inicial da busca.
+- `RAIO_PADRAO_KM`: raio da busca no OpenStreetMap (fora da Grande Vitória).
 
-Pesos e itens ficam em `js/itens.js`, com o peso médio aproximado de cada unidade em kg.
+Pesos, itens e ícones ficam em `web/src/dados.js`, com o peso médio aproximado de cada unidade em kg.
+As cores e a fonte ficam no tema, em `web/src/comum/Raiz.jsx`. Depois de editar, gere o site de novo (`npm run build`).
 
 ## Estrutura
 
 ```
 descarte-certo/
-├── index.html      página
-├── css/style.css   visual (responsivo, funciona no celular)
-├── js/config.js    configurações editáveis
-├── js/itens.js     catálogo de itens e pesos médios
-├── js/app.js       lógica (calculadora, localização, mapa, perfil)
-└── servidor.js     servidor local para testes
+├── servidor.js                 API (Node + SQLite) e servidor local do site
+├── pontos/                     pontos de coleta pesquisados (JSON)
+└── web/                        site em React + Mantine (Vite)
+    ├── index.html              página inicial
+    ├── conta.html              Minha área (Minha conta e Histórico)
+    ├── privacidade.html        aviso de privacidade
+    ├── vite.config.js
+    └── src/
+        ├── config.js           configurações editáveis
+        ├── dados.js            catálogo de itens, pesos e ícones
+        ├── comum/              tema, API, cabeçalho/rodapé, janelas de login e cadastro
+        ├── inicio/             calculadora, pontos de coleta, mapa (Leaflet) e seções
+        ├── conta/              página Minha área
+        └── privacidade/        página do aviso de privacidade
 ```
+
+`npm run build` gera o site pronto em `web/dist` (não vai para o git).

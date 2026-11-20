@@ -558,17 +558,20 @@ async function api(req, res, rota) {
 
 /* ------------------------------------------------------------------ */
 /* Arquivos estáticos (apenas para testes locais)                      */
+/* O site é gerado em web/dist com "npm run build" (pasta web/).       */
 /* ------------------------------------------------------------------ */
 const TIPOS = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8",
   ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".ico": "image/x-icon",
 };
-const PERMITIDOS = new Set(["/index.html", "/conta.html", "/privacidade.html", "/css/style.css", "/js/app.js", "/js/config.js", "/js/itens.js", "/js/conta.js"]);
+const PASTA_SITE = process.env.PASTA_SITE || path.join(RAIZ, "web", "dist");
 
 function estatico(req, res, rota) {
   const alvo = rota === "/" ? "/index.html" : rota;
-  if (!PERMITIDOS.has(alvo)) { res.writeHead(404); return res.end("Não encontrado"); }
-  fs.readFile(path.join(RAIZ, alvo), (err, dados) => {
+  const arquivo = path.normalize(path.join(PASTA_SITE, alvo));
+  // Só entrega arquivos de dentro de web/dist, com extensão conhecida.
+  if (!arquivo.startsWith(PASTA_SITE + path.sep) || !TIPOS[path.extname(arquivo)]) { res.writeHead(404); return res.end("Não encontrado"); }
+  fs.readFile(arquivo, (err, dados) => {
     if (err) { res.writeHead(404); return res.end("Não encontrado"); }
     res.writeHead(200, { "Content-Type": TIPOS[path.extname(alvo)] || "application/octet-stream" });
     res.end(dados);

@@ -1,7 +1,8 @@
 /*
  * Configurações que você (aluno) pode editar sem mexer no resto do código.
+ * Depois de editar, gere o site de novo com "npm run build" (pasta web/).
  */
-const CONFIG = {
+export const CONFIG = {
   /* Link do Google Forms de avaliação (deixe "" para esconder a seção).
      Use para a avaliação de satisfação do parceiro/comunidade pedida pela PEI. */
   FORM_URL: "",
