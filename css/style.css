@@ -207,6 +207,19 @@ input, select {
 .historico__rodape { margin-top: 1.25rem; color: var(--texto-2); font-size: .9rem; display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; }
 .link-perigo { background: none; border: 0; padding: 0; font: inherit; color: #b3261e; text-decoration: underline; cursor: pointer; }
 
+/* Aviso de privacidade (privacidade.html) */
+.texto-legal { max-width: 780px; }
+.texto-legal h2 { font-size: 1.25rem; margin: 2rem 0 .75rem; }
+.texto-legal p, .texto-legal li { color: var(--texto); }
+.texto-legal ul { padding-left: 1.2em; display: grid; gap: .6rem; }
+.rodape__links { margin: .75rem 0 0; }
+.rodape__links a { font-weight: 600; }
+
+/* Aceite no cadastro */
+.aceite { display: flex; align-items: flex-start; gap: .6rem; font-weight: 500; color: var(--texto); font-size: .9rem; }
+.aceite input { width: 18px; height: 18px; margin: .1rem 0 0; flex-shrink: 0; accent-color: var(--verde-600); }
+.modal[data-modo="login"] .aceite { display: none; }
+
 /* Página "Minha área" (conta.html) */
 .area { min-height: calc(100vh - 64px - 120px); background: var(--fundo-2); }
 .area h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); color: var(--verde-900); margin: .5rem 0 1.25rem; }

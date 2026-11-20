@@ -86,6 +86,8 @@
     $("#dadoDesde").textContent = usuario.desde ? fmtData(usuario.desde) : "—";
     $("#dadoDescartes").textContent = historico.length.toLocaleString("pt-BR");
     $("#dadoPeso").textContent = total ? fmtKg(total) : "0 kg";
+    $("#dadoPrivacidade").innerHTML = (usuario.privacidadeEm ? `Aceito em ${esc(fmtData(usuario.privacidadeEm))} · ` : "")
+      + `<a href="privacidade.html">Ler o aviso</a>`;
 
     $("#historicoResumo").textContent = historico.length
       ? `Você já registrou ${historico.length} descarte(s), somando aproximadamente ${fmtKg(total)} de lixo eletrônico que não foi para o lixo comum.`

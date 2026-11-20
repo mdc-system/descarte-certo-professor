@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="css/style.css?v=7">
+  <link rel="stylesheet" href="css/style.css?v=8">
 </head>
 <body>
   <header class="topo">
@@ -180,7 +180,8 @@
   <footer class="rodape">
     <div class="container">
       <p>Projeto de Extensão Interdisciplinar (PEI II) · Tema: Sustentabilidade, Meio Ambiente e Desenvolvimento Social.</p>
-      <p class="rodape__fonte">Mapa e pontos de coleta: © colaboradores do <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>. CEP: ViaCEP. Pesos são médias aproximadas.</p>
+      <p class="rodape__fonte">Mapa e pontos de coleta: © colaboradores do <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>. CEP: AwesomeAPI e ViaCEP. Pesos são médias aproximadas.</p>
+      <p class="rodape__links"><a href="privacidade.html">Aviso de privacidade</a></p>
     </div>
   </footer>
 
@@ -202,6 +203,10 @@
         <input type="password" id="contaSenha" minlength="8" maxlength="128" autocomplete="current-password" required>
         <small data-so="cadastro" class="dica-campo">Mínimo de 8 caracteres.</small>
       </label>
+      <label class="aceite" data-so="cadastro">
+        <input type="checkbox" id="contaAceite">
+        <span>Li e aceito o <a href="privacidade.html" target="_blank" rel="noopener">aviso de privacidade</a>.</span>
+      </label>
       <p class="erro-form" id="contaErro" role="alert"></p>
       <div class="modal__acoes">
         <button class="btn btn--ghost" type="button" id="btnFecharConta">Agora não</button>
@@ -213,8 +218,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="js/config.js?v=6"></script>
-  <script src="js/itens.js?v=6"></script>
-  <script src="js/app.js?v=6"></script>
+  <script src="js/config.js?v=8"></script>
+  <script src="js/itens.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
 </body>
 </html>

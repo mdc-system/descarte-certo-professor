@@ -603,6 +603,8 @@ out center 300;`;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { erro.textContent = "Informe um e-mail válido."; return; }
     if (modo === "cadastro" && senha.length < 8) { erro.textContent = "A senha precisa ter pelo menos 8 caracteres."; return; }
     if (!senha) { erro.textContent = "Informe sua senha."; return; }
+    const aceite = $("#contaAceite").checked;
+    if (modo === "cadastro" && !aceite) { erro.textContent = "Para criar a conta, aceite o aviso de privacidade."; return; }
 
     const botao = $("#btnEnviarConta");
     botao.disabled = true;
@@ -610,7 +612,7 @@ out center 300;`;
     try {
       const dados = await apiFetch(modo === "cadastro" ? "cadastro" : "login", {
         method: "POST",
-        body: modo === "cadastro" ? { nome, email, senha } : { email, senha },
+        body: modo === "cadastro" ? { nome, email, senha, aceite } : { email, senha },
       });
       estado.perfil = dados.usuario;
       estado.historico = dados.historico || [];

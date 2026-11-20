@@ -104,6 +104,16 @@ db.exec(`
   );
 `);
 
+/* Migrações simples: colunas novas em bancos que já existem (não apaga nada). */
+function garantirColuna(tabela, coluna, tipo) {
+  const existe = db.prepare(`PRAGMA table_info(${tabela})`).all().some((c) => c.name === coluna);
+  if (!existe) {
+    db.exec(`ALTER TABLE ${tabela} ADD COLUMN ${coluna} ${tipo}`);
+    console.log(`Coluna criada: ${tabela}.${coluna}`);
+  }
+}
+garantirColuna("usuarios", "privacidade_aceita_em", "TEXT"); // data do aceite do aviso de privacidade (LGPD)
+
 /* Sincroniza a tabela de pontos com o arquivo JSON do projeto (o arquivo é a "fonte da verdade"). */
 const PONTOS_PATH = process.env.PONTOS_PATH || path.join(RAIZ, "pontos", "pontos-grande-vitoria.json");
 function sincronizarPontos() {
@@ -146,10 +156,11 @@ function distanciaKm(lat1, lon1, lat2, lon2) {
 
 const sql = {
   usuarioPorEmail: db.prepare("SELECT * FROM usuarios WHERE email = ?"),
-  criarUsuario: db.prepare("INSERT INTO usuarios (nome, email, senha_hash) VALUES (?, ?, ?)"),
+  criarUsuario: db.prepare("INSERT INTO usuarios (nome, email, senha_hash, privacidade_aceita_em) VALUES (?, ?, ?, datetime('now'))"),
+  usuarioPorId: db.prepare("SELECT * FROM usuarios WHERE id = ?"),
   excluirUsuario: db.prepare("DELETE FROM usuarios WHERE id = ?"),
   criarSessao: db.prepare("INSERT INTO sessoes (token_hash, usuario_id, expira_em) VALUES (?, ?, ?)"),
-  sessao: db.prepare(`SELECT u.id, u.nome, u.email, u.criado_em FROM sessoes s JOIN usuarios u ON u.id = s.usuario_id
+  sessao: db.prepare(`SELECT u.id, u.nome, u.email, u.criado_em, u.privacidade_aceita_em FROM sessoes s JOIN usuarios u ON u.id = s.usuario_id
                       WHERE s.token_hash = ? AND s.expira_em > ?`),
   excluirSessao: db.prepare("DELETE FROM sessoes WHERE token_hash = ?"),
   limparSessoes: db.prepare("DELETE FROM sessoes WHERE expira_em <= ?"),
@@ -366,10 +377,12 @@ function historicoDe(usuarioId) {
   }));
 }
 
+const isoUtc = (sqlData) => (sqlData ? `${sqlData.replace(" ", "T")}Z` : null);
 const publico = (u) => ({
   nome: u.nome,
   email: u.email,
-  desde: u.criado_em ? `${u.criado_em.replace(" ", "T")}Z` : new Date().toISOString(),
+  desde: isoUtc(u.criado_em) || new Date().toISOString(),
+  privacidadeEm: isoUtc(u.privacidade_aceita_em),
 });
 
 /* ------------------------------------------------------------------ */
@@ -424,10 +437,12 @@ async function api(req, res, rota) {
     if (nome.length < 2) return json(res, 400, { erro: "Informe seu nome." });
     if (!EMAIL_OK.test(email)) return json(res, 400, { erro: "Informe um e-mail válido." });
     if (senha.length < 8 || senha.length > 128) return json(res, 400, { erro: "A senha precisa ter de 8 a 128 caracteres." });
+    if (b.aceite !== true) return json(res, 400, { erro: "Para criar a conta, aceite o aviso de privacidade." });
     if (sql.usuarioPorEmail.get(email)) return json(res, 409, { erro: "Já existe uma conta com esse e-mail. Use a aba Entrar." });
     const r = sql.criarUsuario.run(nome, email, hashSenha(senha));
-    criarSessao(res, Number(r.lastInsertRowid));
-    return json(res, 201, { usuario: publico({ nome, email }), historico: [] });
+    const id = Number(r.lastInsertRowid);
+    criarSessao(res, id);
+    return json(res, 201, { usuario: publico(sql.usuarioPorId.get(id)), historico: [] });
   }
 
   if (req.method === "POST" && rota === "/api/login") {
@@ -493,7 +508,7 @@ const TIPOS = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8",
   ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".ico": "image/x-icon",
 };
-const PERMITIDOS = new Set(["/index.html", "/conta.html", "/css/style.css", "/js/app.js", "/js/config.js", "/js/itens.js", "/js/conta.js"]);
+const PERMITIDOS = new Set(["/index.html", "/conta.html", "/privacidade.html", "/css/style.css", "/js/app.js", "/js/config.js", "/js/itens.js", "/js/conta.js"]);
 
 function estatico(req, res, rota) {
   const alvo = rota === "/" ? "/index.html" : rota;
