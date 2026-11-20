@@ -34,12 +34,16 @@ Desenvolvimento Social*).
 
 ## Pontos de coleta cadastrados
 
-São **244 pontos** em Vitória, Vila Velha, Serra, Cariacica, Guarapari, Viana e Fundão, pesquisados em 19/11/2026:
-67 recebem eletrônicos, 129 só pilhas e 48 só lâmpadas. As fontes foram as prefeituras (Vitória, Vila Velha, Serra e
-Cariacica), os localizadores oficiais da Green Eletron, ABREE, Reciclus e Green Recicla Pilhas, e o OpenStreetMap.
-As coordenadas vêm desses localizadores; quando faltavam, foram obtidas pelo Nominatim e conferidas pelo bairro.
-Quinze pontos têm posição aproximada (centro do bairro), e o site avisa isso. O campo `nota_pesquisa` guarda as
-anotações completas da pesquisa e não aparece no site.
+São **222 pontos** em Vitória, Vila Velha, Serra, Cariacica, Guarapari, Viana e Fundão, pesquisados em 19/11/2026:
+59 recebem eletrônicos, 115 só pilhas e 48 só lâmpadas. As fontes foram as prefeituras (Vitória, Vila Velha, Serra e
+Cariacica) e os localizadores oficiais da Green Eletron, ABREE, Reciclus e Green Recicla Pilhas.
+As coordenadas vêm desses localizadores ou de mapas oficiais; quando faltavam, foram obtidas pelo Nominatim e
+conferidas pelo bairro. O campo `nota_pesquisa` guarda as anotações completas da pesquisa e não aparece no site.
+
+**Só entram pontos com informação confirmada.** Em 20/11/2026 foram retirados 22 pontos: os que vinham só do
+OpenStreetMap, sem fonte oficial; coletores anunciados mas não confirmados em funcionamento; pontos com fontes
+contraditórias; e pontos cuja posição no mapa não pôde ser confirmada. Também foram retirados os itens aceitos que só
+fontes antigas citavam.
 
 Ficam em **`pontos/pontos-grande-vitoria.json`**. Ao iniciar, a API copia esse arquivo para a tabela
 `pontos_coleta` do banco. Para incluir, corrigir ou remover um ponto, edite o arquivo e reinicie a API.
