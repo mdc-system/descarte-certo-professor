@@ -8,6 +8,44 @@ O site (pasta `web/`) é feito em **React** com a biblioteca de componentes **[M
 e os ícones **[Lucide](https://lucide.dev)**, gerado com **[Vite](https://vite.dev)**. A API (`servidor.js`) é Node puro com SQLite.
 Todas as bibliotecas são gratuitas e de código aberto (licenças MIT e ISC).
 
+## Para assistentes de IA (leia antes de mudar qualquer coisa)
+
+Este repositório também é editado com ajuda de IA (Claude Code, Codex, Copilot, Cursor etc.).
+Se você é uma IA trabalhando aqui, siga este fluxo do começo ao fim:
+
+1. **Nunca faça push no `main`.** O `main` é protegido: só o dono do repositório (Medisith) atualiza esse branch,
+   e um push direto é recusado pelo GitHub. Não tente contornar a regra.
+2. **Crie uma branch a partir do `main` atualizado**, com nome curto no formato `tipo/assunto`
+   (ex.: `feat/filtro-por-cidade`, `fix/mapa-no-celular`, `docs/readme`):
+
+   ```bash
+   git fetch origin && git switch -c feat/assunto origin/main
+   ```
+
+3. **Use o projeto como ele é.** O site fica em `web/` (React + Mantine + Vite) e a API em `servidor.js`
+   (Node + SQLite). Veja [Como rodar no computador](#como-rodar-no-computador), a [Estrutura](#estrutura) e
+   [Personalizar](#personalizar-arquivo-websrcconfigjs). Siga o padrão que já existe: componentes do Mantine,
+   ícones do `lucide-react`, cores do tema em `web/src/comum/Raiz.jsx` e textos em português.
+4. **Antes de abrir o PR, confira:**
+   - `cd web && npm run build` termina sem erros;
+   - as telas que você mudou funcionam no navegador, inclusive na largura de celular;
+   - não ficou `console.log`, código comentado ou arquivo de teste esquecido.
+5. **Abra um único PR com a versão final das alterações**, apontando para o `main`:
+
+   ```bash
+   git push -u origin HEAD
+   gh pr create --base main --title "Título curto do que mudou" --body "O que mudou e por quê; como testou; prints se mudou algo visual"
+   ```
+
+   Se o dono pedir ajustes, faça novos commits **na mesma branch**: o PR se atualiza sozinho. Não abra um PR novo para cada ajuste.
+6. **Não faça merge e não aprove o próprio PR.** Quem revisa e faz o merge no `main` é o dono do repositório.
+7. **Não publique nada no servidor (VPS).** Você não tem acesso a ele e não deve pedir. A publicação é feita só
+   pelo dono, depois do merge (seção [Publicado em](#publicado-em)).
+8. **Não coloque segredos no repositório**: senhas, chaves SSH, tokens, IP do servidor, arquivos `.env`.
+   Também não versione `data/`, `*.db`, `node_modules/` nem `web/dist/` (já estão no `.gitignore`).
+9. **A API e o banco estão em produção.** Se você mudar rota, formato de resposta ou tabela em `servidor.js`,
+   explique isso no PR: a API é publicada separadamente do site, e o banco tem dados reais de usuários.
+
 ## O que o site faz
 
 1. **Explica por que** pilhas e eletrônicos não podem ir para o lixo comum (metais pesados,
@@ -109,6 +147,8 @@ e-mail existe, e excluir a conta apaga tudo em cascata. Colunas novas entram por
 ## Publicado em
 
 **https://technologyhm.com.br/descarte-certo/**
+
+A publicação é feita só pelo dono do repositório, depois do merge no `main`. Os comandos abaixo precisam do acesso SSH à VPS, que não fica neste repositório.
 
 | Parte | Onde fica na VPS |
 |---|---|
