@@ -1,0 +1,12 @@
+# Banco de dados local (contas e histórico de usuários): nunca versionar
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Ferramentas e sistema
+.claude/
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
