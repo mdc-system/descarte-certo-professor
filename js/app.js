@@ -575,8 +575,9 @@ out center 300;`;
       a.classList.toggle("aba--ativa", ativa);
       a.setAttribute("aria-selected", String(ativa));
     });
-    $("#btnEnviarConta").textContent = modo === "cadastro" ? "Criar conta" : "Entrar";
-    $("#contaSenha").autocomplete = modo === "cadastro" ? "new-password" : "current-password";
+    const TEXTO_BOTAO = { cadastro: "Criar conta", login: "Entrar", recuperar: "Trocar senha" };
+    $("#btnEnviarConta").textContent = TEXTO_BOTAO[modo];
+    $("#contaSenha").autocomplete = modo === "login" ? "current-password" : "new-password";
     $("#contaErro").textContent = "";
   }
 
@@ -591,6 +592,28 @@ out center 300;`;
   modal.querySelectorAll(".aba").forEach((a) => a.addEventListener("click", () => modoConta(a.dataset.modo)));
   $("#btnFecharConta").addEventListener("click", () => { acaoPendente = null; modal.close(); });
   $("#btnCadastreHero").addEventListener("click", () => abrirConta("cadastro"));
+  $("#btnEsqueci").addEventListener("click", () => { modoConta("recuperar"); $("#contaCodigo").focus(); });
+  $("#btnVoltarLogin").addEventListener("click", () => modoConta("login"));
+
+  /* Código de recuperação: mostrado uma única vez, numa janela que só fecha com "Já guardei". */
+  const modalCodigo = $("#modalCodigo");
+  let aoGuardarCodigo = null;
+  function mostrarCodigo(codigo) {
+    return new Promise((resolve) => {
+      $("#codigoTexto").textContent = codigo;
+      aoGuardarCodigo = resolve;
+      modalCodigo.showModal();
+    });
+  }
+  modalCodigo.addEventListener("cancel", (e) => e.preventDefault()); // Esc não fecha
+  $("#btnCodigoGuardado").addEventListener("click", () => {
+    modalCodigo.close();
+    if (aoGuardarCodigo) { const r = aoGuardarCodigo; aoGuardarCodigo = null; r(); }
+  });
+  $("#btnCopiarCodigo").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText($("#codigoTexto").textContent); toast("Código copiado."); }
+    catch { toast("Não deu para copiar. Selecione o código e copie manualmente."); }
+  });
 
   $("#formConta").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -598,10 +621,12 @@ out center 300;`;
     const nome = $("#contaNome").value.trim();
     const email = $("#contaEmail").value.trim();
     const senha = $("#contaSenha").value;
+    const codigo = $("#contaCodigo").value.trim();
     const erro = $("#contaErro");
     if (modo === "cadastro" && nome.length < 2) { erro.textContent = "Informe seu nome."; return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { erro.textContent = "Informe um e-mail válido."; return; }
-    if (modo === "cadastro" && senha.length < 8) { erro.textContent = "A senha precisa ter pelo menos 8 caracteres."; return; }
+    if (modo === "recuperar" && codigo.replace(/[^A-Za-z0-9]/g, "").length < 12) { erro.textContent = "Digite o código de recuperação completo (12 letras e números)."; return; }
+    if (modo !== "login" && senha.length < 8) { erro.textContent = "A senha precisa ter pelo menos 8 caracteres."; return; }
     if (!senha) { erro.textContent = "Informe sua senha."; return; }
     const aceite = $("#contaAceite").checked;
     if (modo === "cadastro" && !aceite) { erro.textContent = "Para criar a conta, aceite o aviso de privacidade."; return; }
@@ -610,19 +635,23 @@ out center 300;`;
     botao.disabled = true;
     erro.textContent = "";
     try {
-      const dados = await apiFetch(modo === "cadastro" ? "cadastro" : "login", {
-        method: "POST",
-        body: modo === "cadastro" ? { nome, email, senha, aceite } : { email, senha },
-      });
+      const ROTA = { cadastro: "cadastro", login: "login", recuperar: "recuperar" };
+      const CORPO = {
+        cadastro: { nome, email, senha, aceite },
+        login: { email, senha },
+        recuperar: { email, codigo, senha },
+      };
+      const dados = await apiFetch(ROTA[modo], { method: "POST", body: CORPO[modo] });
       estado.perfil = dados.usuario;
       estado.historico = dados.historico || [];
       const depois = acaoPendente;
       acaoPendente = null;
       modal.close();
       renderConta();
-      toast(modo === "cadastro"
-        ? `Conta criada. Bem-vindo(a), ${estado.perfil.nome.split(" ")[0]}!`
-        : `Olá de novo, ${estado.perfil.nome.split(" ")[0]}!`);
+      if (dados.codigoRecuperacao) await mostrarCodigo(dados.codigoRecuperacao);
+      const primeiro = estado.perfil.nome.split(" ")[0];
+      toast({ cadastro: `Conta criada. Bem-vindo(a), ${primeiro}!`, login: `Olá de novo, ${primeiro}!`,
+        recuperar: `Senha trocada, ${primeiro}. Use o código novo da próxima vez.` }[modo]);
       if (depois) depois();
     } catch (err) {
       erro.textContent = err.message;

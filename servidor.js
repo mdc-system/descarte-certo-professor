@@ -113,6 +113,8 @@ function garantirColuna(tabela, coluna, tipo) {
   }
 }
 garantirColuna("usuarios", "privacidade_aceita_em", "TEXT"); // data do aceite do aviso de privacidade (LGPD)
+garantirColuna("usuarios", "recuperacao_hash", "TEXT");      // hash do código de recuperação de senha
+garantirColuna("usuarios", "recuperacao_criado_em", "TEXT");
 
 /* Sincroniza a tabela de pontos com o arquivo JSON do projeto (o arquivo é a "fonte da verdade"). */
 const PONTOS_PATH = process.env.PONTOS_PATH || path.join(RAIZ, "pontos", "pontos-grande-vitoria.json");
@@ -158,9 +160,14 @@ const sql = {
   usuarioPorEmail: db.prepare("SELECT * FROM usuarios WHERE email = ?"),
   criarUsuario: db.prepare("INSERT INTO usuarios (nome, email, senha_hash, privacidade_aceita_em) VALUES (?, ?, ?, datetime('now'))"),
   usuarioPorId: db.prepare("SELECT * FROM usuarios WHERE id = ?"),
+  atualizarSenha: db.prepare("UPDATE usuarios SET senha_hash = ? WHERE id = ?"),
+  definirCodigo: db.prepare("UPDATE usuarios SET recuperacao_hash = ?, recuperacao_criado_em = datetime('now') WHERE id = ?"),
+  excluirSessoesDoUsuario: db.prepare("DELETE FROM sessoes WHERE usuario_id = ?"),
   excluirUsuario: db.prepare("DELETE FROM usuarios WHERE id = ?"),
   criarSessao: db.prepare("INSERT INTO sessoes (token_hash, usuario_id, expira_em) VALUES (?, ?, ?)"),
-  sessao: db.prepare(`SELECT u.id, u.nome, u.email, u.criado_em, u.privacidade_aceita_em FROM sessoes s JOIN usuarios u ON u.id = s.usuario_id
+  sessao: db.prepare(`SELECT u.id, u.nome, u.email, u.criado_em, u.privacidade_aceita_em,
+                             (u.recuperacao_hash IS NOT NULL) AS tem_codigo
+                      FROM sessoes s JOIN usuarios u ON u.id = s.usuario_id
                       WHERE s.token_hash = ? AND s.expira_em > ?`),
   excluirSessao: db.prepare("DELETE FROM sessoes WHERE token_hash = ?"),
   limparSessoes: db.prepare("DELETE FROM sessoes WHERE expira_em <= ?"),
@@ -383,7 +390,19 @@ const publico = (u) => ({
   email: u.email,
   desde: isoUtc(u.criado_em) || new Date().toISOString(),
   privacidadeEm: isoUtc(u.privacidade_aceita_em),
+  temCodigo: Boolean(u.tem_codigo ?? u.recuperacao_hash),
 });
+
+/* Código de recuperação de senha: 12 caracteres sem letras/números ambíguos (sem I, O, 0, 1),
+   mostrado uma única vez; no banco fica só o hash (scrypt), como a senha. */
+const ALFABETO_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const normalizarCodigo = (c) => String(c || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 24);
+function novoCodigo(usuarioId) {
+  let s = "";
+  for (let i = 0; i < 12; i++) s += ALFABETO_CODIGO[crypto.randomInt(ALFABETO_CODIGO.length)];
+  sql.definirCodigo.run(hashSenha(s), usuarioId);
+  return s.match(/.{4}/g).join("-");
+}
 
 /* ------------------------------------------------------------------ */
 /* Rotas da API                                                        */
@@ -441,8 +460,44 @@ async function api(req, res, rota) {
     if (sql.usuarioPorEmail.get(email)) return json(res, 409, { erro: "Já existe uma conta com esse e-mail. Use a aba Entrar." });
     const r = sql.criarUsuario.run(nome, email, hashSenha(senha));
     const id = Number(r.lastInsertRowid);
+    const codigoRecuperacao = novoCodigo(id);
     criarSessao(res, id);
-    return json(res, 201, { usuario: publico(sql.usuarioPorId.get(id)), historico: [] });
+    return json(res, 201, { usuario: publico(sql.usuarioPorId.get(id)), historico: [], codigoRecuperacao });
+  }
+
+  // Esqueci minha senha: e-mail + código de recuperação + nova senha.
+  if (req.method === "POST" && rota === "/api/recuperar") {
+    if (excedeuLimite(`rec:${ip}`)) return json(res, 429, { erro: "Muitas tentativas. Aguarde alguns minutos." });
+    const b = await lerJson(req);
+    const email = texto(b.email, 120).toLowerCase();
+    const codigo = normalizarCodigo(b.codigo);
+    const senha = typeof b.senha === "string" ? b.senha : "";
+    if (senha.length < 8 || senha.length > 128) return json(res, 400, { erro: "A nova senha precisa ter de 8 a 128 caracteres." });
+    const u = sql.usuarioPorEmail.get(email);
+    const ok = conferirSenha(codigo, u && u.recuperacao_hash ? u.recuperacao_hash : HASH_FALSO);
+    if (!u || !u.recuperacao_hash || !ok) return json(res, 401, { erro: "E-mail ou código de recuperação incorretos." });
+    let codigoRecuperacao;
+    db.exec("BEGIN");
+    try {
+      sql.atualizarSenha.run(hashSenha(senha), u.id);
+      sql.excluirSessoesDoUsuario.run(u.id);      // desconecta os outros aparelhos
+      codigoRecuperacao = novoCodigo(u.id);       // o código usado deixa de valer
+      db.exec("COMMIT");
+    } catch (err) {
+      db.exec("ROLLBACK");
+      throw err;
+    }
+    criarSessao(res, u.id);
+    return json(res, 200, { usuario: publico(sql.usuarioPorId.get(u.id)), historico: historicoDe(u.id), codigoRecuperacao });
+  }
+
+  // Gera um novo código de recuperação (o anterior deixa de valer). Só com login.
+  if (req.method === "POST" && rota === "/api/recuperacao/codigo") {
+    const u = usuarioDaSessao(req);
+    if (!u) return json(res, 401, { erro: "Entre na sua conta para gerar um código." });
+    if (excedeuLimite(`cod:${u.id}`, 10, 60 * 60 * 1000)) return json(res, 429, { erro: "Muitos códigos gerados. Tente mais tarde." });
+    await lerJson(req);
+    return json(res, 200, { codigoRecuperacao: novoCodigo(u.id) });
   }
 
   if (req.method === "POST" && rota === "/api/login") {

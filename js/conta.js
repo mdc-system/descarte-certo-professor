@@ -20,10 +20,15 @@
     toastTimer = setTimeout(() => el.classList.remove("toast--visivel"), 3200);
   }
 
-  async function apiFetch(rota, { method = "GET" } = {}) {
+  async function apiFetch(rota, { method = "GET", body } = {}) {
     let r;
     try {
-      r = await fetch(`api/${rota}`, { method, credentials: "same-origin" });
+      r = await fetch(`api/${rota}`, {
+        method,
+        credentials: "same-origin",
+        headers: body ? { "Content-Type": "application/json" } : {},
+        body: body ? JSON.stringify(body) : undefined,
+      });
     } catch {
       throw new Error("Sem conexão com o servidor. Verifique sua internet e tente de novo.");
     }
@@ -88,6 +93,7 @@
     $("#dadoPeso").textContent = total ? fmtKg(total) : "0 kg";
     $("#dadoPrivacidade").innerHTML = (usuario.privacidadeEm ? `Aceito em ${esc(fmtData(usuario.privacidadeEm))} · ` : "")
       + `<a href="privacidade.html">Ler o aviso</a>`;
+    renderCodigo(usuario.temCodigo);
 
     $("#historicoResumo").textContent = historico.length
       ? `Você já registrou ${historico.length} descarte(s), somando aproximadamente ${fmtKg(total)} de lixo eletrônico que não foi para o lixo comum.`
@@ -101,6 +107,34 @@
 
     mostrarSecao(location.hash.slice(1) || "conta", { atualizarEndereco: !!location.hash });
   }
+
+  /* ---------- Código de recuperação de senha ---------- */
+  let temCodigo = false;
+  function renderCodigo(tem) {
+    temCodigo = !!tem;
+    $("#cartaoCodigo").classList.toggle("cartao--alerta", !temCodigo);
+    $("#codigoSituacao").textContent = temCodigo
+      ? "Sua conta tem um código de recuperação. Se você perdeu o código, gere um novo: o anterior deixa de valer."
+      : "Sua conta ainda não tem código de recuperação. Gere um agora: sem ele, quem esquece a senha perde o acesso ao histórico.";
+  }
+
+  $("#btnGerarCodigo").addEventListener("click", async () => {
+    if (temCodigo && !confirm("Gerar um novo código? O código anterior deixa de valer.")) return;
+    const botao = $("#btnGerarCodigo");
+    botao.disabled = true;
+    try {
+      const { codigoRecuperacao } = await apiFetch("recuperacao/codigo", { method: "POST", body: {} });
+      $("#codigoNovo").textContent = codigoRecuperacao;
+      $("#codigoNovo").hidden = false;
+      $("#codigoAviso").hidden = false;
+      renderCodigo(true);
+      $("#codigoSituacao").textContent = "Este é o seu novo código de recuperação:";
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      botao.disabled = false;
+    }
+  });
 
   async function sair() {
     try { await apiFetch("logout", { method: "POST" }); } catch { /* sai mesmo assim */ }

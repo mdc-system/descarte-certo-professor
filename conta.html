@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=8">
+  <link rel="stylesheet" href="css/style.css?v=9">
 </head>
 <body class="pagina-conta">
   <header class="topo">
@@ -63,6 +63,14 @@
             </dl>
           </div>
 
+          <div class="cartao" id="cartaoCodigo">
+            <h2>Código de recuperação</h2>
+            <p class="sub" id="codigoSituacao"></p>
+            <p class="codigo" id="codigoNovo" hidden></p>
+            <p class="aviso-codigo" id="codigoAviso" hidden>Anote, tire um print ou salve num lugar seguro: <strong>ele não será mostrado de novo</strong>. O código anterior deixou de valer.</p>
+            <button type="button" class="btn btn--secundario" id="btnGerarCodigo">Gerar novo código</button>
+          </div>
+
           <div class="cartao cartao--perigo">
             <h2>Excluir conta</h2>
             <p>Apaga seu cadastro e todo o seu histórico de descartes. Essa ação não pode ser desfeita.</p>
@@ -92,6 +100,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="js/conta.js?v=8"></script>
+  <script src="js/conta.js?v=9"></script>
 </body>
 </html>

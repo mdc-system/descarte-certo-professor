@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="css/style.css?v=8">
+  <link rel="stylesheet" href="css/style.css?v=9">
 </head>
 <body>
   <header class="topo">
@@ -185,24 +185,31 @@
     </div>
   </footer>
 
-  <!-- Modal de cadastro / login -->
+  <!-- Modal de cadastro / login / recuperação de senha -->
   <dialog class="modal" id="modalConta">
     <form class="modal__corpo" id="formConta" novalidate>
-      <div class="abas" role="tablist">
+      <div class="abas" role="tablist" data-so="cadastro login">
         <button type="button" role="tab" class="aba" data-modo="cadastro">Cadastre-se</button>
         <button type="button" role="tab" class="aba" data-modo="login">Entrar</button>
       </div>
-      <p id="contaTexto">Com uma conta, o histórico do que você descartou fica salvo. Sem conta, você usa tudo normalmente, mas nada é guardado.</p>
+      <h2 data-so="recuperar">Recuperar senha</h2>
+      <p data-so="cadastro login">Com uma conta, o histórico do que você descartou fica salvo. Sem conta, você usa tudo normalmente, mas nada é guardado.</p>
+      <p data-so="recuperar">Digite seu e-mail, o <strong>código de recuperação</strong> que você guardou ao criar a conta e uma senha nova.</p>
       <label data-so="cadastro">Nome
         <input type="text" id="contaNome" maxlength="60" autocomplete="name">
       </label>
       <label>E-mail
         <input type="email" id="contaEmail" maxlength="120" autocomplete="email" required>
       </label>
-      <label>Senha
-        <input type="password" id="contaSenha" minlength="8" maxlength="128" autocomplete="current-password" required>
-        <small data-so="cadastro" class="dica-campo">Mínimo de 8 caracteres.</small>
+      <label data-so="recuperar">Código de recuperação
+        <input type="text" id="contaCodigo" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX">
       </label>
+      <label>
+        <span data-so="cadastro login">Senha</span><span data-so="recuperar">Nova senha</span>
+        <input type="password" id="contaSenha" minlength="8" maxlength="128" autocomplete="current-password" required>
+        <small data-so="cadastro recuperar" class="dica-campo">Mínimo de 8 caracteres.</small>
+      </label>
+      <button type="button" class="link-acao" data-so="login" id="btnEsqueci">Esqueci minha senha</button>
       <label class="aceite" data-so="cadastro">
         <input type="checkbox" id="contaAceite">
         <span>Li e aceito o <a href="privacidade.html" target="_blank" rel="noopener">aviso de privacidade</a>.</span>
@@ -212,14 +219,28 @@
         <button class="btn btn--ghost" type="button" id="btnFecharConta">Agora não</button>
         <button class="btn btn--primario" type="submit" id="btnEnviarConta">Criar conta</button>
       </div>
+      <button type="button" class="link-acao" data-so="recuperar" id="btnVoltarLogin">← Voltar para Entrar</button>
     </form>
+  </dialog>
+
+  <!-- Código de recuperação (mostrado uma única vez) -->
+  <dialog class="modal" id="modalCodigo">
+    <div class="modal__corpo">
+      <h2>Guarde seu código de recuperação</h2>
+      <p>Se você esquecer a senha, é com ele que você cria uma nova. <strong>Ele não será mostrado de novo.</strong> Anote, tire um print ou salve num lugar seguro.</p>
+      <p class="codigo" id="codigoTexto"></p>
+      <div class="modal__acoes">
+        <button class="btn btn--ghost" type="button" id="btnCopiarCodigo">Copiar código</button>
+        <button class="btn btn--primario" type="button" id="btnCodigoGuardado">Já guardei</button>
+      </div>
+    </div>
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="js/config.js?v=8"></script>
-  <script src="js/itens.js?v=8"></script>
-  <script src="js/app.js?v=8"></script>
+  <script src="js/config.js?v=9"></script>
+  <script src="js/itens.js?v=9"></script>
+  <script src="js/app.js?v=9"></script>
 </body>
 </html>

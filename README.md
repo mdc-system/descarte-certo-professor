@@ -20,7 +20,12 @@ Desenvolvimento Social*).
    e o histórico aparece em qualquer aparelho. **"Minha conta" e "Histórico"** ficam numa página própria
    (`conta.html`), em duas abas: os dados básicos com o botão de excluir a conta e os dados, e a lista de descartes.
    O site também mostra o total de kg registrado pela comunidade.
-5. **Avaliação**: link opcional para um Google Forms de satisfação (útil para a PEI).
+5. **Privacidade (LGPD)**: aviso em `privacidade.html`, aceite obrigatório no cadastro (data salva no banco)
+   e link no rodapé e na Minha conta.
+6. **Recuperação de senha por código**: no cadastro a pessoa recebe um código (`XXXX-XXXX-XXXX`) mostrado uma
+   única vez. Em "Esqueci minha senha", e-mail + código + nova senha trocam a senha, desconectam os outros
+   aparelhos e geram um código novo. Na Minha conta dá para gerar outro código. Não usa serviço de e-mail.
+7. **Avaliação**: link opcional para um Google Forms de satisfação (útil para a PEI).
 
 ## APIs gratuitas usadas (sem chave, sem custo)
 
@@ -73,16 +78,19 @@ Abra http://localhost:5173. O mesmo servidor entrega o site e a API, e o banco l
 
 | Tabela | Conteúdo |
 |---|---|
-| `usuarios` | nome, e-mail (único), senha com hash **scrypt** + sal |
+| `usuarios` | nome, e-mail (único), senha e código de recuperação com hash **scrypt** + sal, data do aceite do aviso de privacidade |
 | `sessoes` | hash SHA-256 do token de sessão, validade de 30 dias |
 | `descartes` | ponto de coleta, peso total e data, ligado ao usuário |
 | `descarte_itens` | itens de cada descarte (nome, quantidade, peso unitário) |
 
-Rotas: `GET /api/me`, `POST /api/cadastro`, `POST /api/login`, `POST /api/logout`,
-`POST /api/descartes`, `DELETE /api/conta`, `GET /api/estatisticas`, `GET /api/saude`.
+Rotas: `GET /api/me`, `POST /api/cadastro`, `POST /api/login`, `POST /api/logout`, `POST /api/recuperar`,
+`POST /api/recuperacao/codigo`, `POST /api/descartes`, `DELETE /api/conta`, `GET /api/estatisticas`,
+`GET /api/pontos`, `GET /api/localizar`, `GET /api/saude`.
 
 Segurança: cookie de sessão `HttpOnly` + `Secure` + `SameSite=Lax`, a API só aceita JSON,
-limite de 10 tentativas de login/cadastro a cada 15 min por IP, e excluir a conta apaga tudo em cascata.
+limite de 10 tentativas de login, cadastro e recuperação a cada 15 min por IP, mensagens de erro que não revelam se o
+e-mail existe, e excluir a conta apaga tudo em cascata. Colunas novas entram por migração automática ao iniciar
+(`garantirColuna` em `servidor.js`), sem apagar dados.
 
 ## Publicado em
 
