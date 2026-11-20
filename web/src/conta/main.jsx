@@ -6,7 +6,7 @@ import {
 } from "@mantine/core";
 import { ArrowLeft, History, KeyRound, LogOut, MapPin, Trash2, User } from "lucide-react";
 import Raiz, { avisar } from "../comum/Raiz.jsx";
-import { Cabecalho, Rodape } from "../comum/Moldura.jsx";
+import { Cabecalho, Rodape, estiloSemQuebra } from "../comum/Moldura.jsx";
 import { CodigoGrande, Confirmar } from "../comum/Janelas.jsx";
 import { apiFetch } from "../comum/api.js";
 import { fmtData, fmtKg, primeiroNome } from "../comum/util.js";
@@ -175,7 +175,7 @@ function PaginaConta() {
       <Cabecalho inicio="./" links={[["Calcular", "./#calcular"], ["Pontos de coleta", "./#pontos"]]}>
         {usuario ? (
           <>
-            <Text fw={700} c="verde.9" visibleFrom="xs">Olá, {primeiroNome(usuario.nome)}</Text>
+            <Text fw={700} c="verde.9" visibleFrom="sm" style={estiloSemQuebra}>Olá, {primeiroNome(usuario.nome)}</Text>
             <Button variant="subtle" size="sm" onClick={sair} leftSection={<LogOut size={14} />}>Sair</Button>
           </>
         ) : carga.estado === "pronto" ? (

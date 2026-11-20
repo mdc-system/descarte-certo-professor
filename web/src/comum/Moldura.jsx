@@ -1,8 +1,18 @@
 /* Cabeçalho e rodapé comuns às três páginas. */
-import { Anchor, Box, Container, Group, Text, ThemeIcon } from "@mantine/core";
-import { Recycle } from "lucide-react";
+import { ActionIcon, Anchor, Box, Container, Group, Menu, Text, ThemeIcon } from "@mantine/core";
+import { Menu as IconeMenu, Recycle } from "lucide-react";
 
-export function Cabecalho({ inicio = "./", links = [], children }) {
+const SEM_QUEBRA = { whiteSpace: "nowrap" };
+
+/*
+ * O topo nunca quebra linha:
+ * - em telas grandes (lg, 1200 px+), os `links` ficam na barra;
+ * - abaixo disso, vão para o menu recolhido (☰), junto com os `menuExtra`
+ *   ({ texto, href } ou { texto, onClick, cor }), para o que não couber na barra (ex.: Histórico, Sair, Entrar).
+ * Os botões passados em `children` decidem, com visibleFrom, a partir de que largura aparecem.
+ */
+export function Cabecalho({ inicio = "./", links = [], menuExtra = [], children }) {
+  const itensMenu = [...links.map(([texto, href]) => ({ texto, href })), ...menuExtra];
   return (
     <Box component="header" pos="sticky" top={0} bg="white"
       style={{ zIndex: 100, borderBottom: "1px solid var(--mantine-color-gray-2)" }}>
@@ -11,20 +21,43 @@ export function Cabecalho({ inicio = "./", links = [], children }) {
           <Anchor href={inicio} underline="never" style={{ flex: "none" }}>
             <Group gap="xs" wrap="nowrap">
               <ThemeIcon size={36} radius="md" aria-hidden="true"><Recycle size={20} /></ThemeIcon>
-              <Text fw={800} size="lg" c="verde.9">Descarte Certo</Text>
+              <Text fw={800} size="lg" c="verde.9" style={SEM_QUEBRA}>Descarte Certo</Text>
             </Group>
           </Anchor>
-          <Group gap="xl" visibleFrom="md" component="nav" aria-label="Principal">
+          <Group gap="lg" wrap="nowrap" visibleFrom="lg" component="nav" aria-label="Principal">
             {links.map(([texto, href]) => (
-              <Anchor key={href} href={href} c="gray.7" fw={500} underline="never">{texto}</Anchor>
+              <Anchor key={href} href={href} c="gray.7" fw={500} underline="never" style={SEM_QUEBRA}>{texto}</Anchor>
             ))}
           </Group>
-          <Group gap="xs" wrap="nowrap">{children}</Group>
+          <Group gap="xs" wrap="nowrap" style={{ flex: "none" }}>
+            {children}
+            {itensMenu.length > 0 && (
+              <Box hiddenFrom="lg">
+                <Menu position="bottom-end" shadow="md" width={230} withinPortal>
+                  <Menu.Target>
+                    <ActionIcon variant="default" size={36} radius="xl" aria-label="Abrir menu">
+                      <IconeMenu size={18} />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    {itensMenu.map((item) => (item.href ? (
+                      <Menu.Item key={item.texto} component="a" href={item.href}>{item.texto}</Menu.Item>
+                    ) : (
+                      <Menu.Item key={item.texto} onClick={item.onClick} color={item.cor}>{item.texto}</Menu.Item>
+                    )))}
+                  </Menu.Dropdown>
+                </Menu>
+              </Box>
+            )}
+          </Group>
         </Group>
       </Container>
     </Box>
   );
 }
+
+/* Texto sem quebra de linha para o "Olá, Nome" do topo. */
+export const estiloSemQuebra = SEM_QUEBRA;
 
 export function Rodape({ fontes = false, privacidade = true }) {
   return (

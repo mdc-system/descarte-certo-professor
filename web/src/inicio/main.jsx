@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { Anchor, Button } from "@mantine/core";
 import { LogOut } from "lucide-react";
 import Raiz, { avisar } from "../comum/Raiz.jsx";
-import { Cabecalho, Rodape } from "../comum/Moldura.jsx";
+import { Cabecalho, Rodape, estiloSemQuebra } from "../comum/Moldura.jsx";
 import { ModalCodigo, ModalConta } from "../comum/Janelas.jsx";
 import { apiFetch } from "../comum/api.js";
 import { fmtKg, primeiroNome, store } from "../comum/util.js";
@@ -119,18 +119,26 @@ function PaginaInicio() {
 
   return (
     <>
-      <Cabecalho inicio="#inicio" links={[["Por que descartar", "#porque"], ["Calcular", "#calcular"], ["Pontos de coleta", "#pontos"]]}>
+      <Cabecalho
+        inicio="#inicio"
+        links={[["Por que descartar", "#porque"], ["Calcular", "#calcular"], ["Pontos de coleta", "#pontos"]]}
+        menuExtra={perfil
+          ? [{ texto: "Minha conta", href: "conta.html#conta" }, { texto: "Histórico", href: "conta.html#historico" }, { texto: "Sair", onClick: sair, cor: "red" }]
+          : [{ texto: "Entrar", onClick: () => abrirConta("login") }, { texto: "Cadastre-se", onClick: () => abrirConta("cadastro") }]}
+      >
         {perfil ? (
           <>
-            <Anchor href="conta.html#conta" fw={700} c="verde.9" visibleFrom="sm" underline="never">Olá, {primeiroNome(perfil.nome)}</Anchor>
-            <Button component="a" href="conta.html#conta" variant="default" size="sm">Minha conta</Button>
+            <Anchor href="conta.html#conta" fw={700} c="verde.9" visibleFrom="lg" underline="never" style={estiloSemQuebra}>
+              Olá, {primeiroNome(perfil.nome)}
+            </Anchor>
+            <Button component="a" href="conta.html#conta" variant="default" size="sm" visibleFrom="xs">Minha conta</Button>
             <Button component="a" href="conta.html#historico" variant="default" size="sm" visibleFrom="md">Histórico</Button>
-            <Button variant="subtle" size="sm" onClick={sair} leftSection={<LogOut size={14} />}>Sair</Button>
+            <Button variant="subtle" size="sm" onClick={sair} leftSection={<LogOut size={14} />} visibleFrom="sm">Sair</Button>
           </>
         ) : (
           <>
-            <Button variant="default" onClick={() => abrirConta("login")} visibleFrom="xs">Entrar</Button>
-            <Button onClick={() => abrirConta("cadastro")}>Cadastre-se</Button>
+            <Button variant="default" size="sm" onClick={() => abrirConta("login")} visibleFrom="sm">Entrar</Button>
+            <Button size="sm" onClick={() => abrirConta("cadastro")} visibleFrom="xs">Cadastre-se</Button>
           </>
         )}
       </Cabecalho>
