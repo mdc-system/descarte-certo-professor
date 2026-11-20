@@ -11,7 +11,14 @@ Todas as bibliotecas são gratuitas e de código aberto (licenças MIT e ISC).
 ## Para assistentes de IA (leia antes de mudar qualquer coisa)
 
 Este repositório também é editado com ajuda de IA (Claude Code, Codex, Copilot, Cursor etc.).
-Se você é uma IA trabalhando aqui, siga este fluxo do começo ao fim:
+Se você é uma IA trabalhando aqui, **leia primeiro estes dois guias**, que explicam o padrão a seguir:
+
+- **[docs/PROJETO.md](docs/PROJETO.md)**: como o projeto é feito (arquitetura, pastas, padrão do front-end em
+  React + Mantine e do back-end em `servidor.js`, fluxos que não podem quebrar, como testar);
+- **[docs/BANCO.md](docs/BANCO.md)**: como o banco SQLite está feito hoje (tabelas, relações, convenções e
+  como criar tabela ou coluna sem quebrar o banco de produção).
+
+Depois, siga este fluxo do começo ao fim:
 
 1. **Nunca faça push no `main`.** O `main` é protegido: só o dono do repositório (Medisith) atualiza esse branch,
    e um push direto é recusado pelo GitHub. Não tente contornar a regra.
@@ -23,7 +30,8 @@ Se você é uma IA trabalhando aqui, siga este fluxo do começo ao fim:
    ```
 
 3. **Use o projeto como ele é.** O site fica em `web/` (React + Mantine + Vite) e a API em `servidor.js`
-   (Node + SQLite). Veja [Como rodar no computador](#como-rodar-no-computador), a [Estrutura](#estrutura) e
+   (Node + SQLite). Veja [docs/PROJETO.md](docs/PROJETO.md), [docs/BANCO.md](docs/BANCO.md),
+   [Como rodar no computador](#como-rodar-no-computador), a [Estrutura](#estrutura) e
    [Personalizar](#personalizar-arquivo-websrcconfigjs). Siga o padrão que já existe: componentes do Mantine,
    ícones do `lucide-react`, cores do tema em `web/src/comum/Raiz.jsx` e textos em português.
 4. **Antes de abrir o PR, confira:**
@@ -210,6 +218,9 @@ As cores e a fonte ficam no tema, em `web/src/comum/Raiz.jsx`. Depois de editar,
 descarte-certo/
 ├── servidor.js                 API (Node + SQLite) e servidor local do site
 ├── pontos/                     pontos de coleta pesquisados (JSON)
+├── docs/
+│   ├── PROJETO.md              como o projeto é feito (guia para pessoas e IA)
+│   └── BANCO.md                como o banco está feito (guia para pessoas e IA)
 └── web/                        site em React + Mantine (Vite)
     ├── index.html              página inicial
     ├── conta.html              Minha área (Minha conta e Histórico)
