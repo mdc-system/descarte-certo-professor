@@ -37,6 +37,7 @@ flowchart LR
 ```
 descarte-certo/
 ├── servidor.js                  API + banco + arquivos do site nos testes locais (tudo do back-end)
+├── testes/                      testes da API com node:test (banco temporário, nunca o data/)
 ├── pontos/
 │   └── pontos-grande-vitoria.json   pontos de coleta pesquisados (fonte da verdade; vai para o banco ao iniciar)
 ├── data/                        banco SQLite local (criado sozinho; fora do git)
@@ -140,8 +141,9 @@ rotas (`async function api(req, res, rota)`), arquivos estáticos e o `http.crea
   3. se precisar de login: `const u = usuarioDaSessao(req); if (!u) return json(res, 401, { erro: "…" });`
   4. se puder ser abusada: `` if (excedeuLimite(`chave:${ip}`, max, janelaMs)) return json(res, 429, { erro: "…" }); ``
   5. responda com `json(res, status, dados)`; erro sempre como `{ erro: "mensagem em português" }`.
-- **Limites de tentativa** (em memória, por processo): login e cadastro, 10 a cada 15 min por IP (contador
-  compartilhado); recuperar senha, 10 a cada 15 min por IP; localizar, 60 a cada 10 min por IP; gerar código,
+- **Limites de tentativa** (em memória, por processo): login, 10 senhas erradas a cada 15 min por IP (o login certo
+  não conta); cadastro, 30 a cada 15 min por IP (`LIMITE_CADASTROS`). Os dois têm contadores separados porque, numa
+  palestra, todo o público sai pelo mesmo IP. Recuperar senha, 10 a cada 15 min por IP; localizar, 60 a cada 10 min por IP; gerar código,
   10 por hora por usuário.
 - **Localização** (`localizar()`): olha o `geocache`; se não tiver, CEP vai para AwesomeAPI e, como reserva,
   ViaCEP + Nominatim (conferindo cidade e bairro); endereço vai para o Nominatim. O Nominatim passa por uma fila de
@@ -182,6 +184,7 @@ em outro terminal, rode `cd web && npm run dev` (o Vite repassa `/api` para a po
 
 Antes de abrir o PR, confira pelo menos:
 
+- `node --test testes/` na raiz, sem falhas (precisa da porta livre entre 5600 e 5900);
 - `npm run build` sem erros e sem avisos novos;
 - no navegador, sem erros no console: calculadora, busca por CEP (ex.: `29101-010`, Vila Velha), "Usar minha
   localização", mapa, e o fluxo que você mexeu;

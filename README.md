@@ -148,7 +148,8 @@ Rotas: `GET /api/me`, `POST /api/cadastro`, `POST /api/login`, `POST /api/logout
 `GET /api/pontos`, `GET /api/localizar`, `GET /api/saude`.
 
 Segurança: cookie de sessão `HttpOnly` + `Secure` + `SameSite=Lax`, a API só aceita JSON,
-limite de 10 tentativas de login, cadastro e recuperação a cada 15 min por IP, mensagens de erro que não revelam se o
+limites por IP a cada 15 min (10 senhas erradas no login, 30 cadastros e 10 recuperações; o login certo não conta,
+para uma palestra na mesma rede Wi-Fi não travar), mensagens de erro que não revelam se o
 e-mail existe, e excluir a conta apaga tudo em cascata. Colunas novas entram por migração automática ao iniciar
 (`garantirColuna` em `servidor.js`), sem apagar dados.
 
@@ -217,6 +218,7 @@ As cores e a fonte ficam no tema, em `web/src/comum/Raiz.jsx`. Depois de editar,
 ```
 descarte-certo/
 ├── servidor.js                 API (Node + SQLite) e servidor local do site
+├── testes/                     testes da API (node --test testes/)
 ├── pontos/                     pontos de coleta pesquisados (JSON)
 ├── docs/
 │   ├── PROJETO.md              como o projeto é feito (guia para pessoas e IA)

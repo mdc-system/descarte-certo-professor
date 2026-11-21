@@ -243,13 +243,23 @@ function usuarioDaSessao(req) {
 /* Limite de tentativas (login/cadastro)                               */
 /* ------------------------------------------------------------------ */
 const tentativas = new Map();
-function excedeuLimite(ip, max = 10, janelaMs = 15 * 60 * 1000) {
+function contador(chave, janelaMs) {
   const agora = Date.now();
-  const t = tentativas.get(ip);
-  if (!t || t.reinicia < agora) { tentativas.set(ip, { n: 1, reinicia: agora + janelaMs }); return false; }
+  let t = tentativas.get(chave);
+  if (!t || t.reinicia < agora) { t = { n: 0, reinicia: agora + janelaMs }; tentativas.set(chave, t); }
+  return t;
+}
+function excedeuLimite(chave, max = 10, janelaMs = 15 * 60 * 1000) {
+  const t = contador(chave, janelaMs);
   t.n += 1;
   return t.n > max;
 }
+// Numa palestra, todo o público sai pelo mesmo IP do Wi-Fi. Por isso o login conta só as senhas erradas
+// e o cadastro tem contador próprio, maior.
+// ponytail: 30 cadastros por IP a cada 15 min; para evento maior, suba LIMITE_CADASTROS antes de começar.
+const LIMITE_CADASTROS = 30;
+const LIMITE_FALHAS_LOGIN = 10;
+const JANELA_MS = 15 * 60 * 1000;
 setInterval(() => {
   const agora = Date.now();
   for (const [ip, t] of tentativas) if (t.reinicia < agora) tentativas.delete(ip);
@@ -448,7 +458,7 @@ async function api(req, res, rota) {
   }
 
   if (req.method === "POST" && rota === "/api/cadastro") {
-    if (excedeuLimite(ip)) return json(res, 429, { erro: "Muitas tentativas. Aguarde alguns minutos." });
+    if (excedeuLimite(`cad:${ip}`, LIMITE_CADASTROS, JANELA_MS)) return json(res, 429, { erro: "Muitas tentativas. Aguarde alguns minutos." });
     const b = await lerJson(req);
     const nome = texto(b.nome, 60);
     const email = texto(b.email, 120).toLowerCase();
@@ -501,13 +511,14 @@ async function api(req, res, rota) {
   }
 
   if (req.method === "POST" && rota === "/api/login") {
-    if (excedeuLimite(ip)) return json(res, 429, { erro: "Muitas tentativas. Aguarde alguns minutos." });
+    const falhas = contador(`login:${ip}`, JANELA_MS);
+    if (falhas.n >= LIMITE_FALHAS_LOGIN) return json(res, 429, { erro: "Muitas tentativas. Aguarde alguns minutos." });
     const b = await lerJson(req);
     const email = texto(b.email, 120).toLowerCase();
     const senha = typeof b.senha === "string" ? b.senha.slice(0, 128) : "";
     const u = sql.usuarioPorEmail.get(email);
     const ok = conferirSenha(senha, u ? u.senha_hash : HASH_FALSO);
-    if (!u || !ok) return json(res, 401, { erro: "E-mail ou senha incorretos." });
+    if (!u || !ok) { falhas.n += 1; return json(res, 401, { erro: "E-mail ou senha incorretos." }); }
     criarSessao(res, u.id);
     return json(res, 200, { usuario: publico(u), historico: historicoDe(u.id) });
   }
