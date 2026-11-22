@@ -20,7 +20,7 @@ Se você é uma IA trabalhando aqui, **leia primeiro estes dois guias**, que exp
 
 Depois, siga este fluxo do começo ao fim:
 
-1. **Nunca faça push no `main`.** O `main` é protegido: só o dono do repositório (Medisith) atualiza esse branch,
+1. **Nunca faça push no `main`.** O `main` é protegido: só o dono do repositório (mdc-system) atualiza esse branch,
    e um push direto é recusado pelo GitHub. Não tente contornar a regra.
 2. **Crie uma branch a partir do `main` atualizado**, com nome curto no formato `tipo/assunto`
    (ex.: `feat/filtro-por-cidade`, `fix/mapa-no-celular`, `docs/readme`):
