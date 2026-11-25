@@ -1,5 +1,9 @@
 # ♻️ Descarte Certo
 
+> **Cópia para avaliação do PEI II (Multivix).** Este repositório é uma cópia pública do código do Descarte Certo,
+> feita em 24/11/2026 para o professor acompanhar o projeto. Ele **não é usado em produção**: o site no ar
+> ([technologyhm.com.br/descarte-certo](https://technologyhm.com.br/descarte-certo/)) é publicado a partir do repositório original, que é privado.
+
 Site para incentivar o **descarte correto de lixo eletrônico**. Produto da disciplina
 **Prática de Extensão Interdisciplinar II** (tema: *Sustentabilidade, Meio Ambiente e
 Desenvolvimento Social*).
